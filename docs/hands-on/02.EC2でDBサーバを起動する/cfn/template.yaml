@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'homework 02'
+Parameters:
+  VPC:
+    Type: AWS::EC2::VPC::Id
+  Subnet:
+    Type: AWS::EC2::Subnet::Id
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: vockey
+  EC2ImageId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64
+  InstanceProfile:
+    Type: String
+    Default: LabInstanceProfile
+Resources:
+  BastionSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: For a bastion server
+      GroupName: bastion security group
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags: 
+        - Key: Name
+          Value: bastion
+      VpcId:
+        !Ref VPC
+  BastionSVR:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        !Ref EC2ImageId
+      InstanceType: t2.micro
+      KeyName:
+        !Ref KeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: "0"
+          GroupSet:
+            - !Ref BastionSG
+          SubnetId:
+            !Ref Subnet
+      IamInstanceProfile:
+        !Ref InstanceProfile
+      Tags:
+        - Key: Name
+          Value: bastion

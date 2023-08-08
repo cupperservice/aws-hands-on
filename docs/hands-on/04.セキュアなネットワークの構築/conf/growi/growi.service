@@ -1,0 +1,11 @@
+[Unit]
+Description=Growi
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/growi
+EnvironmentFile=/opt/growi/growi.conf
+ExecStart=/usr/bin/npm start
+
+[Install]
+WantedBy=multi-user.target

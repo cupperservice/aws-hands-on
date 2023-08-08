@@ -1,0 +1,9 @@
+site_name: AWS ハンズオン集
+theme:
+  name: material
+  palette:
+    primary: green
+  alternate:
+    - name: Japanese
+      link: /
+      lang: ja
