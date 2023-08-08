@@ -1,4 +1,5 @@
 site_name: AWS ハンズオン集
+use_directory_urls: false
 theme:
   name: material
   palette:
