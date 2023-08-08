@@ -6,10 +6,12 @@
 2. ID プロバイダ登録
 arn:aws:iam::391726422976:oidc-provider/token.actions.githubusercontent.com
 
-2. ロール作成
+3. ロール作成
 arn:aws:iam::391726422976:role/aws-hands-on-kawashima-kazuh
 
-2. シークレット登録
+4. CloudFront Distribution作成
+
+4. シークレット登録
 
     Github に以下のシークレットを登録する
 
