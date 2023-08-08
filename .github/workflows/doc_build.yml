@@ -27,7 +27,7 @@ jobs:
 
       - name: Install MkDocs
         run: |
-          pip install -U mkdocs
+          pip install -U mkdocs mkdocs-material
 
       - name: Build
         run: |
