@@ -35,7 +35,7 @@ jobs:
 
       - name: aws test
         run: |
-          aws s3 ls s3://${{ secrets.BUCKET_NAME }}
+          aws s3 ls s3://kawashima-kazuh-aws-hands-on
 
       - name: Sync html to s3
         run: |
