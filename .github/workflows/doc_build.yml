@@ -35,4 +35,4 @@ jobs:
 
       - name: Sync html to s3
         run: |
-          aws s3 sync ./site s3://${{ secrets.BUCKET_NAME }}/ --delete --quiet
+          aws s3 sync ./site s3://${{ secrets.BUCKET_NAME }}/site --delete --quiet
