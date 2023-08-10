@@ -8,3 +8,15 @@ theme:
     - name: Japanese
       link: /
       lang: ja
+  features:
+    - navigation.tabs
+    - content.code.copy
+plugins:
+  search:
+    lang: 'ja'
+markdown_extensions:
+    # コードハイライトの設定
+    - codehilite:
+        noclasses: true
+        pygments_style: colorful
+        linenums: false

@@ -18,3 +18,8 @@ arn:aws:iam::391726422976:role/aws-hands-on-kawashima-kazuh
     * AWS_ROLE_ARN
     * AWS_REGION
     * BUCKET_NAME
+
+aws acm request-certificate \
+    --domain-name *.kawashima-kazuh.com \
+    --validation-method DNS \
+    --region us-east-1

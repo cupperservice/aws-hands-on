@@ -106,7 +106,7 @@ EC2 のインスタンス一覧の画面で作成した EC2 を選択、Security
 4. AWS CLI で EC2 を起動  
 以下のパラメータを設定
 
-```
+```bash
 AMI_ID=AMI ID
 SECURITY_GROUP_ID=Security Group ID
 ROLE=Instance Profile ARN
@@ -115,7 +115,7 @@ NAME=Instance Name
 
 コマンドを実行
 
-```
+```bash
 aws ec2 run-instances \
 --image-id "$AMI_ID" \
 --count 1 \
@@ -130,20 +130,20 @@ aws ec2 run-instances \
 5. EC2 の情報を確認  
 以下のパラメータを設定
 
-```
+```bash
 INSTANCE_ID=Instance ID
 ```
 
 コマンドを実行
 
-```
+```bash
 aws ec2 describe-instances \
 --instance-ids "$INSTANCE_ID"
 ```
 
 実行結果を `jq` で加工する
 
-```
+```bash
 aws ec2 describe-instances \
 --instance-ids "$INSTANCE_ID" \
 | jq '.Reservations[].Instances'
@@ -152,13 +152,13 @@ aws ec2 describe-instances \
 6. EC2 を停止する  
 以下のパラメータを設定
 
-```
+```bash
 INSTANCE_ID=Instance ID
 ```
 
 コマンドを実行
 
-```
+```bash
 aws ec2 stop-instances \
 --instance-ids "$INSTANCE_ID"
 ```
@@ -166,7 +166,7 @@ aws ec2 stop-instances \
 EC2 インスタンスの状態を確認  
 `stopped` となれば停止完了
 
-```
+```bash
 aws ec2 describe-instances \
 --instance-ids "$INSTANCE_ID" \
 | jq '.Reservations[].Instances[0].State.Name'
@@ -175,20 +175,20 @@ aws ec2 describe-instances \
 7. EC2 を起動する  
 以下のパラメータを設定
 
-```
+```bash
 INSTANCE_ID=Instance ID
 ```
 
 コマンドを実行
 
-```
+```bash
 aws ec2 start-instances \
 --instance-ids "$INSTANCE_ID"
 ```
 
 EC2 インスタンスの状態を確認
 
-```
+```bash
 aws ec2 describe-instances \
 --instance-ids "$INSTANCE_ID" \
 | jq '.Reservations[].Instances[0].State.Name'
@@ -197,13 +197,13 @@ aws ec2 describe-instances \
 8. EC2 を終了する  
 以下のパラメータを設定
 
-```
+```bash
 INSTANCE_ID=Instance ID
 ```
 
 コマンドを実行
 
-```
+```bash
 aws ec2 terminate-instances \
 --instance-ids "$INSTANCE_ID"
 ```
@@ -211,7 +211,7 @@ aws ec2 terminate-instances \
 EC2 インスタンスの状態を確認  
 `terminated` となれば終了
 
-```
+```bash
 aws ec2 describe-instances \
 --instance-ids "$INSTANCE_ID" \
 | jq '.Reservations[].Instances[0].State.Name'
@@ -245,68 +245,78 @@ EC2 に接続してシェル (bash) が起動する
 終了するには右上の [Terminate] を押す
 
 ### EC2 インスタンスにSSH で接続
-1. 秘密鍵を取得  
-    Leaner Lab の AWS Details を押す
-    ![](./img/ssh-1.png)
+#### 秘密鍵を CloudShell にアップロードする
+* 秘密鍵を取得する
 
-    [Download PEM] を押す
-    ![](./img/ssh-2.png)
+Leaner Lab の AWS Details を押す
+![](./img/ssh-1.png)
 
-2. CloudShell を起動
+[Download PEM] を押す
+![](./img/ssh-2.png)
 
-3. Actions -> Upload file を押す
+* 秘密鍵を CloudShell にアップロードする
+CloudShell を起動
+
+サービスの検索で `CloudShell` を検索して選択する
+
+Actions -> Upload file を押す
 ![](./img/ssh-3.png)
 
-4. ファイルを選択、[Upload] を押す
+ファイルを選択、[Upload] を押す
 ![](./img/ssh-4.png)
 
-5. 鍵のパーミッションを変更
-    * 変更前
-    ```
-    ls -l labsuser.pem
-    -rw-rw-r-- 1 cloudshell-user cloudshell-user 1674 Jan 25 07:51 labsuser.pem
-    ```
+#### ssh コマンドを使用して CloudShell から EC2 インスタンスに接続する
+鍵のパーミッションを変更
 
-    * 変更
-    ```
-    chmod 0400 labsuser.pem
-    ```
+`ssh` コマンドで使用する鍵のパーミッションはファイルのオーナー（所有者）だけが読み込むことができる必要があります。
 
-    * 変更後
-    ```
-    ls -l labsuser.pem 
-    -r-------- 1 cloudshell-user cloudshell-user 1674 Jan 25 07:51 labsuser.pem
-    ````
-
-6. ssh agent を起動
+以下のコマンドを実行して CloudShell にアップロードした鍵のパーミッションを確認します。
+    
+```bash
+ls -l labsuser.pem
 ```
+
+CloudShell にアップロードしたファイルのパーミッションは以下のように表示されるはずです。  
+以下の `-rw-rw-r--` の部分がそのファイルのパーミションを表しています。  
+これはオーナー、グループに読み込み、書き込み権限があり、その他ユーザーに読み込み権限があることを意味しています。
+
+```
+-rw-rw-r-- 1 cloudshell-user cloudshell-user 1674 Jan 25 07:51 labsuser.pem
+```
+
+以下のコマンドを実行してファイルのオーナーだけが読み込むことができるようにパーミッションを変更します。
+
+```bash
+chmod 400 labsuser.pem
+```
+
+`ls` コマンドを実行して鍵のパーミッションを確認します。
+
+```bash
+ls -l labsuser.pem 
+```
+
+以下のように表示されればOKです。
+
+```bash
+-r-------- 1 cloudshell-user cloudshell-user 1674 Jan 25 07:51 labsuser.pem
+```
+
+ssh agent を起動
+
+```bash
 eval $(ssh-agent)
 ```
 
-7. 鍵を登録
-```
+鍵を登録
+
+```bash
 ssh-add labsuser.pem
 ```
 
-8. EC2 インスタンスに SSH で接続
-```
+EC2 インスタンスに SSH で接続
+
+```bash
 PUBLIC_IP=EC2 インスタンスの Public IP
 ssh -A ec2-user@"$PUBLIC_IP"
 ```
-
-# 課題
-以下の AMI を使用して EC2 インスタンスを作成し、CloudShell から SSH で接続する
-* Ubuntu
-* Debian
-
-## 提出物
-以下のスクリーンショットを提出してください。  
-__注意__: CloudShell で実行したことがわかるように画面全体のスクリーンショットを提出してください。
-
-CloudShell から EC2インスタンスに SSH で接続し、以下のコマンドを実行して OS の種類を確認する。
-```
-date "+%Y-%m-%d %H:%M:%S.%N" > date.txt
-cat /etc/os-release
-```
-
-__Note__：Amazon Linux では `ec2-user` で SSH 接続していたが、`ubuntu`, `debian` ではどのユーザーを使用すれば良いでしょうか？
