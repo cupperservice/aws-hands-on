@@ -36,8 +36,8 @@ S3 サービスの画面から バケットを作成します。
 ---
 General configuration
 
-* Bucket name: 任意の値 (すべてのリージョンで一意にする必要がある)
-* AWS Region: US East (N. Virginia) us-east-1
+* Bucket name: 任意の値を指定する (すべてのリージョンで一意にする必要がある)
+* AWS Region: データを保管するリージョンを選択する
 
 ### 静的 Web サイトホスティングを有効にする
 
@@ -83,10 +83,7 @@ S3 の画面でバケットを選択 -> Permissions タブを選択します。
 
 ![](./img/bucket-policy-1.png)
 
----
-Bucket policy
-
-* 以下のポリシーを貼りつけて「Save Changes」を押します。
+以下のポリシーを貼りつけて「Save Changes」を押します。
 
 `Bucket-Name` は自分で作成したバケットの名前に置き換えてください。
 
@@ -109,19 +106,24 @@ Bucket policy
 }
 ```
 
+* ポリシーを貼り付けた結果
+![](./img/bucket-policy-2.png)
+
 ### コンテンツをバケットにアップロードする
 コンテンツを S3 にアップロードします。
 
-ブラウザから S3 の URL にアクセスして静的コンテンツが表示されることを確認しましょう。
+コンテンツをアップロードしたら、ブラウザから S3 の URL にアクセスして静的コンテンツが表示されることを確認しましょう。
 
-* S3 の URL は以下で確認する
+* S3 の URL
 
     S3 の画面でバケットを選択 -> Properties タブを選択、Static website hosting に記載されています。
 
 ![](./img/static-website-hosting-3.png)
 
 ## CloudFront を使用する
-CloudFront を経由して S3 のバケットに保管した静的コンテンツを配信する
+インターネットから S3 のバケットに直接アクセスするのではなくインターネットから CloudFront を経由して S3 のバケットに保管したコンテンツにアクセスします。
+
+以下の手順でコンテンツを配信します。
 
 1. バケットを作成する
 2. コンテンツをバケットにアップロードする
@@ -134,8 +136,8 @@ S3 サービスの画面から バケットを作成します。
 ---
 General configuration
 
-* Bucket name: 任意の値 (すべてのリージョンで一意にする必要がある)
-* AWS Region: US East (N. Virginia) us-east-1
+* Bucket name: 任意の値を指定する (すべてのリージョンで一意にする必要がある)
+* AWS Region: データを保管するリージョンを選択する
 
 ### コンテンツをバケットにアップロードする
 コンテンツを S3 にアップロードします。
@@ -165,13 +167,17 @@ CloudFront のサービスに移動し、「Create distribution」を押して�
 ディストリビューションの作成が完了するまで数分間待つ
 
 ### S3 のバケットポリシーを更新する
+CloudFront から S3 のバケットにアクセスできるように S3 のバケットポリシーを更新します。
+
 CloudFront の画面でディストリビューションを選択します。
 
 Origins タブで Origin を選択して、「Edit」を押します。
 
 ![](./img/cloudfront-4.png)
 
-「Copy policy」を押して、`Go to S3 bucket permissions` のリンクから S3 の画面に移動します。
+「Copy policy」を押して CloudFront から S3 のバケットにアクセスできるようにするためのバケットポリシーをクリップボードにコピーします。
+
+`Go to S3 bucket permissions` のリンクから S3 の画面に移動します。
 
 ![](./img/cloudfront-5.png)
 
