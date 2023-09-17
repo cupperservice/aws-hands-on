@@ -2,8 +2,8 @@
 このハンズオンでは JavaScript を使用して Lambda 関数を作成します。
 
 ## 前提条件
-このハンズオンでは Node.js v16 以降を使用します。  
-[Cloud9](https://aws.amazon.com/jp/cloud9/) は、Node.js v16.x がインストールされており、ブラウザのみで利用することができるため便利です。
+このハンズオンでは Node.js v18 を使用します。  
+[Cloud9](https://aws.amazon.com/jp/cloud9/) は、Node.js がインストールされており、ブラウザのみで利用することができるため便利です。
 
 ## 公式ドキュメント
 * [Lambda](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/welcome.html)
@@ -129,7 +129,7 @@ aws lambda create-function \
 --function-name thumbnail \
 --zip-file fileb://thumbnail.zip \
 --handler thumbnail.handler \
---runtime nodejs16.x \
+--runtime nodejs18.x \
 --role 作成したロールの ARN \
 --timeout 60
 ```
@@ -150,11 +150,8 @@ aws lambda update-function-code \
 --zip-file fileb://thumbnail.zip
 ```
 
-## Lambda 関数を実行する
-作成した Lambda 関数を aws コマンドと AWS SDK の 2つの方法で実行します。
-
-### aws コマンドで実行する
-aws コマンドを使用して Lambda 関数を実行します。
+### Lambda 関数を実行する
+作成した Lambda 関数を aws コマンドを使用して実行します。
 
 ```bash
 aws lambda invoke \
@@ -202,11 +199,48 @@ Log groups で `/aws/lambda/thumnail` を選択すると Log group の詳細情�
 Log stream を選択すると Lambda 関数が出力したログの内容が確認できます。
 ![](./img/cw-3.png)
 
-### JavaScript で Lambda 関数を実行する
-JavaScript で書かれたプログラムから Lambda 関数を実行してみます。
+### Lambda 関数を削除する
+作成した Lambda 関数を削除します。
 
-#### nodejs のプロジェクトの用意
-適当なディレクトリを作成してプロジェクトを初期化します。  
+```bash
+aws lambda delete-function \
+--function-name thumbnail
+```
+
+## Thumbnail を作成する Lambda 関数を作成する
+S3 のバケットに保管した画像を Lambda 関数で読み込み、サムネイル画像を作成して別の S3 バケットに保管する Lambda 関数を作成します。
+
+![](./img/thumbnail-1.png)
+
+サムネイル画像は、[sharp](https://github.com/lovell/sharp) というモジュールを使用して作成します。
+
+Lambda 関数を実行するロールは前述の手順で作成したロールを使用します。
+
+### 事前準備
+S3 に以下の2つのバケットを作成します。
+
+* オリジナル画像を保管するバケット
+* サムネイル画像を保管するバケット
+  * バケット名はオリジナル画像を保管するバケット名-thumbnail とします。
+
+### 処理内容
+Lambda関数の処理内容は以下とします。
+
+1. S3(original bucket)から画像を読み込む
+2. 読み込んだ画像からサムネイル画像を作成
+3. サムネイル画像をS3(thumbnail bucket)に保管
+
+### sharp を用意して Layer に登録する
+Lambda 関数のサイズを小さくするために sharp を Layer に登録します。
+
+Lambda 関数に使用する外部モジュールを含めることもできますが、Lambda 関数のサイズが大きくなるため、Layer を使用して外部モジュールを登録することが推奨されています。
+
+[公式ドキュメント](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/configuration-layers.html)
+
+ディレクトリ `nodejs` を作成して以下の手順で sharp を Layer に登録します。
+
+#### プロジェクトを初期化する
+`nodejs` に移動しプロジェクトを初期化します。  
 プロジェクトの初期化は `npm init` コマンドで行います。
 
 コマンドを実行すると package name や version などの質問が表示されますので適当に入力してください。  
@@ -244,156 +278,70 @@ About to write to /home/ec2-user/environment/test/package.json:
 Is this OK? (yes) yes
 ```
 
-#### AWS SDK for JavaScript をインストールする
-Lambda 関数を実行するために AWS SDK for JavaScript をインストールします。
+#### sharp をインストールする
+以下のコマンドで sharp をインストールします。
 
-作成したプロジェクトのディレクトリの下で以下のコマンドを実行します。
-
-```bash
-npm install @aws-sdk/client-lambda
+```
+npm install sharp
 ```
 
-上記コマンドを実行すると `node_modules` というディレクトリが作成され、その中に AWS SDK for JavaScript がインストールされます。
+上記コマンドを実行すると `node_modules` というディレクトリが作成され、その中に sharp がインストールされます。
 
 また、package.json には aws-sdk が dependencies として追加されます。
 
 ```javascript
 "dependencies": {
-  "@aws-sdk/client-lambda": "^3.409.0",
+  "sharp": "^0.32.5",
 }
 ```
 
-#### ESModule を使用する
-ESModule を使用するために `package.json` に以下の内容を追加します。
+#### Layer を登録する
+作成した `nodejs` ディレクトリを zip で固めます。
 
-```javascript
-"type": "module"
+```bash
+zip -r sharp.zip nodejs/node_modules
 ```
 
-package.json の内容は以下のようになります。
+次に以下のコマンドで Layer を登録します。
 
-```javascript
+```bash
+aws lambda publish-layer-version \
+--layer-name sharp \
+--description "sharp module" \
+--zip-file fileb://sharp.zip \
+--compatible-runtimes nodejs18.x \
+--compatible-architectures "x86_64" 
+```
+
+上記コマンドを実行すると以下のような結果が表示されます。
+
+```bash
 {
-  "name": "test",
-  "version": "1.0.0",
-  "description": "",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "@aws-sdk/client-lambda": "^3.409.0"
-  }
+    "Content": {
+        "Location": "https://prod-iad-c1-djusa-layers.s3.us-east-1.amazonaws.com/snapshots/148125964078/sharp-8e61aa31-1716-408b-8874-fd31a4d56278?versionId=CZWF1Jv8mSHSO2ZCPrZmo8aAO2jHtAQA&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEDkaCXVzLWVhc3QtMSJHMEUCIB8qkqKp2LmIFVhCgqyvCyPnjf35HubnKWUpxGjldlGWAiEA30KYOlLYu2f%2B1krkYPs31Lq1NraSFPHbwNu%2FaMU%2B52kquwUIIRAEGgw0NzkyMzMwMjUzNzkiDJ1zAbtl74xlSrBmwiqYBZZKy4qr5nv883lJUo%2FoZwAgHbywkB2pAU8JvNJyIvHoyhQKT1VH8RKMQL6AU4ENIAxTWkjkqlX3lMkHPkB40IpVQQsGTVcuzs%2FbI1lYuAkSk4%2FCDoX486smm%2BuN2I7MdgyikhcD4GqAwFc7jlD7Cvt0xlt6qlpYY1caZO1mlI7GQuh8R6M8W4ykOvGnpTZ5udLt%2BuseKAEsE4Xb%2B%2Fx40c1KgItAZf1%2BWn60Fz4dvJ%2FP988Tns4lbn%2B84db5CF%2FHNYnx7a1lMmoKeGTWLoLICGFAf9xnbz3ntMhmHg4RpiVBvIyzSfKnIQLx24IP95gqRbCKPKo6dOIeuMoAmEuGC7tNVfae1JflL4FJSU16RYgCQVJMDsx86sbN%2FUnVPXudc74lQTDHOz7pPQqE6oyfhEs308Uf%2BOlZY%2F5QfEaAdKr4JUH0htaA9IIrbGjMgtYAIs%2Bwyq31hlM8eLPsr54zt%2BhwkisUpotlfjalzkiT6w%2Bx2OrR7Mx%2FPl2UVf0HiqgIQ5hvCreykiRnfXmG2P%2FxZb7bv4NYSBWTa6QFUdEJV59OQjXx7ZrS3iNEtQeJovasZCGM0ynG7M%2FFKkUTjGONQSNqnk7XYADkUDtlAEmoBWMpqs6b5jD9oMTeLio%2FLMXC%2BxWrSsi13EosIW7TC9O095fkZ%2F8MtkBR951%2FAoivJSYeGCXZTpkEj4tcREEMPB%2BM8KXZZ35QuGVy1ZciPeWN7gZEOnRQ53QBKJkXXeLw3lcaevXqVMNdp95synoGMCvOkX0oOId2n2zF0mu6doHOAQysn0ch5yQbhU0EHN0ArxQjl0eXJFhvi6RqD6buX6lsSeb7i9tSuJWt4X5Fh9IxPo%2B2cXBtu9DE%2BRClRPCQnSJBjal5Tp8oKHQw0v6DqAY6sQGZkhLELwuNQW9DndrihinO0Z72WgyFaBDLN9ZOyXQ0s97HcU2XOx2i5KEsi8%2B9PDwDXJTZiHmuCP4YFHckKQiKCX35fDP%2BachAIxaFzB47v64JJdUJqymKFnQAtXoUQD0iEhfW0emuaErL1zZhNH2Sx9CVOmg9XhbdpgNYWmiToUOYvbEdV42NQkkVHTWppbY5hohOzTRDMEFfCp1qqRC7XbssbqAFiI0aR3D8mmZxlCQ%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230913T011710Z&X-Amz-SignedHeaders=host&X-Amz-Expires=600&X-Amz-Credential=ASIAW7FEDUVR4SIHLDW7%2F20230913%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=ba8becb5cc0e55295e63304a37deeb0f0ebe3aa853afd981337f34ce4ef5073b",
+        "CodeSha256": "mmGphBPkCFgeol4yhFFJXGNOX+IiEUjtlkSgHSaF+c0=",
+        "CodeSize": 7853969
+    },
+    "LayerArn": "arn:aws:lambda:us-east-1:148125964078:layer:sharp",
+    "LayerVersionArn": "arn:aws:lambda:us-east-1:148125964078:layer:sharp:1",
+    "Description": "sharp module",
+    "CreatedDate": "2023-09-13T01:17:15.998+0000",
+    "Version": 1,
+    "CompatibleRuntimes": [
+        "nodejs18.x"
+    ],
+    "CompatibleArchitectures": [
+        "x86_64"
+    ]
 }
 ```
 
-#### Lambda 関数を実行するコードを作成する
-プロジェクトの下に `index.js` というファイルを作成し以下のコードを記述します。
+`LayerVersionArn` は後ほど Lambda 関数を作成する際に使用するためメモしておきます。
 
-``` JavaScript
-import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda"
+### Lambda 関数を作成する
+Lambda 関数を作成する手順は以下の通りです。
 
-const lambda = new LambdaClient({ region: "us-east-1" })
-
-const command = new InvokeCommand({
-  FunctionName: "thumbnail",
-  Payload: JSON.stringify({
-    first_name: "Taro",
-    last_name: "Yamada"
-  }),
-  LogType: "Tail",
-})
-
-lambda.send(command)
-  .then((result) => {
-    const payload = Buffer.from(result.Payload).toString()
-    console.log(`payload=${payload}`)
-
-    const logs = Buffer.from(result.LogResult, "base64").toString()
-    console.log("===== logs =====")
-    console.log(logs)
-  })
-```
-
-#### 作成したJavaScriptを実行する
-以下のコマンドを実行して Lambda 関数を実行します。
-
-```bash
-node index.js
-```
-
-Lambda 関数の実行に成功すると以下のように Lambda 関数の実行結果とログの内容が表示されます。
-
-```bash
-payload=200
-===== logs =====
-START RequestId: 5f89864a-675f-44a2-80a3-0883d5750d5a Version: $LATEST
-2023-09-10T06:13:23.086Z        5f89864a-675f-44a2-80a3-0883d5750d5a    INFO    called thumbnail function!!!
-2023-09-10T06:13:23.087Z        5f89864a-675f-44a2-80a3-0883d5750d5a    INFO    { first_name: 'Taro', last_name: 'Yamada' }
-2023-09-10T06:13:23.089Z        5f89864a-675f-44a2-80a3-0883d5750d5a    INFO    {
-  callbackWaitsForEmptyEventLoop: [Getter/Setter],
-  succeed: [Function (anonymous)],
-  fail: [Function (anonymous)],
-  done: [Function (anonymous)],
-  functionVersion: '$LATEST',
-  functionName: 'thumbnail',
-  memoryLimitInMB: '128',
-  logGroupName: '/aws/lambda/thumbnail',
-  logStreamName: '2023/09/10/[$LATEST]17f820f0cd0f49fdab35ff1ccc411a45',
-  clientContext: undefined,
-  identity: undefined,
-  invokedFunctionArn: 'arn:aws:lambda:us-east-1:148125964078:function:thumbnail',
-  awsRequestId: '5f89864a-675f-44a2-80a3-0883d5750d5a',
-  getRemainingTimeInMillis: [Function: getRemainingTimeInMillis]
-}
-END RequestId: 5f89864a-675f-44a2-80a3-0883d5750d5a
-REPORT RequestId: 5f89864a-675f-44a2-80a3-0883d5750d5a  Duration: 56.64 ms      Billed Duration: 57 ms  Memory Size: 128 MB     Max Memory Used: 57 MB  Init Duration: 149.90 ms
-```
-
-## Thumbnailを作成するコードをLambdaに実装する
-S3 のバケットに保管した画像を Lambda 関数で読み込み、サムネイル画像を作成して別の S3 バケットに保管する Lambda 関数を作成します。
-
-### 事前準備
-S3 に以下のバケットを作成します。
-
-* オリジナル画像を保管するバケット
-* サムネイル画像を保管するバケット
-
-### Lambda 関数の仕様
-#### Lambda関数の入力パラメータ
-Lambda関数の入力パラメータは以下のようになります。
-
-```javascript
-s3: {
-  original: {
-    bucket_name: 画像を読み込むバケット名,
-    key: 読み込む画像ファイルのキー
-  },
-  thumbnail: {
-    bucket_name: サムネイルを保管するバケット名
-  }
-}
-```
-
-#### 処理内容
-Lambda関数の処理内容は以下のようになります。
-
-1. S3(original bucket)から画像を読み込む
-2. 読み込んだ画像からサムネイル画像を作成
-3. サムネイル画像をS3(thumbnail bucket)に保管
-
-#### 画像を変換するために使用するモジュール  
-Lambda 関数の処理で画像を変換するために以下のモジュールを使用します。
-
-* sharp
-
-### Lambda関数のプロジェクトを作成する
-[nodejsのプロジェクトの用意](#nodejs) と同じ手順でプロジェクトを作成します。
-
-### 関数を実装する
+#### Lambda 関数のコードを作成する
 ディレクトリを作成して `thumbnail.js` というファイルを作成します。  
 作成したファイルに以下のコードを記述します。
 
@@ -401,25 +349,27 @@ Lambda 関数の処理で画像を変換するために以下のモジュール�
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3"
 import sharp from "sharp"
 
-// S3クライアントを作成
-const s3client = new S3Client({ region: "us-east-1" })
+const region = process.env.AWS_REGION
 
-// 画像をダウンロードする
+// S3クライアントを作成
+const s3client = new S3Client({ region: region })
+
+// 画像をダウンロードする関数
 const downloadImage = async (bucket, key) => {
-  const image = await s3client.send(new GetObjectCommand({
+  return await s3client.send(new GetObjectCommand({
     Bucket: bucket,
     Key: key
   }))
 }
 
-// サムネイルを作成する
-const createThumbnail = (input) => {
-  return sharp(input).resize(100, 100).toBuffer()
+// サムネイルを作成する関数
+const createThumbnail = async (input) => {
+  return await sharp(input).resize(100, 100).toBuffer()
 }
 
-// 画像をアップロードする
-const uploadImage = (bucket, key, input) => {
-  s3client.send(new PutObjectCommand({
+// 画像をアップロードする関数
+const uploadImage = async (bucket, key, input) => {
+  return await s3client.send(new PutObjectCommand({
     Bucket: bucket,
     Key: key,
     Body: input,
@@ -427,81 +377,175 @@ const uploadImage = (bucket, key, input) => {
   }))
 }
 
-// Lambda関数のエントリポイント
-exports.handler = async (event, context) => {
+// Lambda 関数のエントリポイント
+export const handler = async (event, context) => {
   console.log("start create thumbnail function!!!")
-  const image = await downloadImage(
-    event.s3.original.bucket_name,
-    event.s3.original.key
-  )
+  console.log(`region=${region}`)
 
-  const thumbnail = await createThumbnail(image)
+  // イベントからオリジナル画像のバケット名とキーを取得
+  const originalBucket = event.Records[0].s3.bucket.name
+  const srcKey = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "))
+
+  // サムネイル画像のバケット名を作成
+  const thumbnailBucket = `${originalBucket}-thumbnail`
+
+  const image = await downloadImage(
+    originalBucket,
+    srcKey
+  )
+  console.log('downloaded original image')
+
+  const buffer = Buffer.concat(await image.Body.toArray())
+  const thumbnail = await createThumbnail(buffer)
+  console.log('created thumbnail')
 
   const result = await uploadImage(
-    event.s3.thumbnail.bucket_name,
-    event.s3.original.key,
-    thumbnail)
+    thumbnailBucket,
+    srcKey,
+    thumbnail
+  )
+  console.log('uploaded thumbnail')
 
   console.log('finished create thumbnail function!!!')
   return result
 }
 ```
 
-### sharpをLayerに登録する
-Lambda関数のサイズを小さくするためにsharpをLayerに登録します。
+#### Lambda 関数を登録する
+作成した Lambda 関数のコードを zip で固めます。
 
-[公式ドキュメント](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/configuration-layers.html)
-
-1. ディレクトリ `nodejs` を作成する
-
-2. [package.json](./nodejs/package.json) を `nodejs` の下にコピー
-
-3. layerをダウンロード
-
-    `nodejs` の下で `npm install` を実行する
-
-4. zipで固める
-
-    `zip -r sharp.zip nodejs/node_modules`
-
-5. layerを登録する
-
-```
-aws lambda publish-layer-version \
---layer-name sharp \
---description "sharp module" \
---zip-file fileb://sharp.zip \
---compatible-runtimes nodejs16.x \
---compatible-architectures "x86_64" 
+```bash
+zip thumbnail.zip thumbnail.js
 ```
 
-6. lambda関数にLayerを関連付ける
+次に zip で固めた Lambda 関数を登録します。
 
+```bash
+aws lambda create-function \
+--function-name thumbnail \
+--zip-file fileb://thumbnail.zip \
+--handler thumbnail.handler \
+--runtime nodejs18.x \
+--role 作成したロールの ARN \
+--layers "登録した Layer の Version ARN" \
+--environment "Variables={ORIGINAL_BUCKET=オリジナル画像の S3 バケット名,
+THUMBNAIL_BUCKET=サムネイル画像の S3 バケット名,
+AWS_REGION=us-east-1}" \
+--timeout 60
 ```
-aws lambda update-function-configuration \
---layers "layerのVersion ARN" \
---function-name thumbnail
-```
 
-### Lambda関数を実行する
+AWS management console で Lambda サービスから Functions を確認すると以下のように作成した Lambda 関数が確認できます。
 
-```    
+![](./img/thumbnail-2.png)
+
+Function name の thumbnail をクリックすると作成した Lambda 関数の詳細を確認できます。
+
+![](./img/thumbnail-3.png)
+
+画面を下までスクロールして Layers を確認すると登録した Layer が確認できます。
+
+![](./img/thumbnail-4.png)
+
+#### Lambda関数を実行する
+S3 のバケットにオリジナル画像をアップロードして Lambda 関数が実行されるか確認します。
+
+```bash
 aws lambda invoke \
 --function-name thumbnail \
 --log-type Tail \
 --payload "$(echo '{
-"s3":{
-  "original":{
-    "bucket_name":"オリジナル画像のバケット",
-    "key":"画像オブジェクトのKey"
-  },
-  "thumbnail":{
-    "bucket_name":"サムネイル画像のバケット"
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "オリジナル画像の S3 バケット名"
+        },
+        "object": {
+          "key": "オリジナル画像のキー"
+        }
+      }
     }
-  }
+  ]
 }' | base64)" \
 out \
 --output text \
 --query 'LogResult' \
 | base64 -d
+```
+
+上記コマンドを実行すると以下のように表示されます。
+```
+START RequestId: 2be64433-02f8-4762-8cbd-d0d3e6575e9e Version: $LATEST
+2023-09-17T02:00:08.040Z        2be64433-02f8-4762-8cbd-d0d3e6575e9e    INFO    start create thumbnail function!!!
+2023-09-17T02:00:08.040Z        2be64433-02f8-4762-8cbd-d0d3e6575e9e    INFO    region=us-east-1
+2023-09-17T02:00:08.169Z        2be64433-02f8-4762-8cbd-d0d3e6575e9e    INFO    downloaded original image
+2023-09-17T02:00:08.468Z        2be64433-02f8-4762-8cbd-d0d3e6575e9e    INFO    created thumbnail
+2023-09-17T02:00:08.620Z        2be64433-02f8-4762-8cbd-d0d3e6575e9e    INFO    uploaded thumbnail
+2023-09-17T02:00:08.620Z        2be64433-02f8-4762-8cbd-d0d3e6575e9e    INFO    finished create thumbnail function!!!
+END RequestId: 2be64433-02f8-4762-8cbd-d0d3e6575e9e
+REPORT RequestId: 2be64433-02f8-4762-8cbd-d0d3e6575e9e  Duration: 582.31 ms     Billed Duration: 583 ms Memory Size: 128 MB     Max Memory Used: 118 MB
+```
+
+### S3 のトリガーを使用して Lambda 関数を実行する
+S3 にはバケット内で発生した特定のイベント（例: オブジェクトの作成、更新、削除など）に対して、AWSサービスやLambda 関数などのリソースを自動的に起動するメカニズムがあります。これを S3 のトリガーと呼びます。
+
+この機能を使用して S3 のバケットに画像をアップロードした際に 作成した Lambda 関数を実行するようにします。
+
+#### Lambda 関数への実行権限を付与する
+Lambda 関数を実行するために S3 から Lambda 関数を実行する権限を付与します。
+
+権限を付与するには以下のコマンドを実行します。
+
+* "S3 のバケット名" はオリジナル画像を保管する S3 のバケット名に置き換えてください。
+* "アカウント ID" は自身の AWS のアカウント ID に置き換えてください。
+
+```bash
+aws lambda add-permission \
+--function-name thumbnail \
+--principal s3.amazonaws.com \
+--statement-id s3invoke \
+--action "lambda:InvokeFunction" \
+--source-arn arn:aws:s3:::S3 のバケット名 \
+--source-account アカウント ID
+```
+
+#### S3 のトリガーを作成する
+S3 のバケットに画像をアップロードした際に Lambda 関数を実行するように S3 のトリガーを作成します。
+
+以下の JSON を `notification.json` というファイル名で作成します。
+
+* Lambda 関数の ARNは Lambda 関数を作成した際に表示された ARN に置き換えてください。
+
+```
+{
+"LambdaFunctionConfigurations": [
+    {
+      "Id": "CreateThumbnailEventConfiguration",
+      "LambdaFunctionArn": "Lambda 関数の ARN",
+      "Events": [ "s3:ObjectCreated:Put" ]
+    }
+  ]
+}
+```
+
+次に以下のコマンドを実行して S3 のトリガーを作成します。  
+"S3 のバケット名" はオリジナル画像を保管する S3 のバケット名に置き換えてください。
+
+```
+aws s3api put-bucket-notification-configuration \
+--bucket S3 のバケット名 \
+--notification-configuration file://notification.json
+```
+
+![](./img/triger-1.png)
+
+#### S3 バケットに画像をアップロードする
+S3 バケットに画像をアップロードして Lambda 関数が実行されるか確認します。
+
+以下は aws コマンドを使用して画像をアップロードする例です。
+
+* S3 のバケット名はオリジナル画像を保管する S3 のバケット名に置き換えてください。
+
+```bash
+aws s3 cp img.jpg s3://S3 のバケット名
 ```
