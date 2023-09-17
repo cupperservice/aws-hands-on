@@ -1,5 +1,8 @@
 # Lamda関数を使ってみる
-このハンズオンでは JavaScript を使用して Lambda 関数を作成します。
+このハンズオンでは JavaScript を使用して Lambda 関数を作成する方法を学習します。
+
+まずは単にログを出すだけの Lambda 関数を作成し、その後に S3 に保管した画像を読み込んでサムネイル画像を作成する Lambda 関数を作成します。  
+また、S3 のトリガーを使用して Lambda 関数を実行する方法も学習します。
 
 ## 前提条件
 このハンズオンでは Node.js v18 を使用します。  
@@ -9,7 +12,7 @@
 * [Lambda](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/welcome.html)
 * [JavaScript用 AWS SDK](https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v2/developer-guide/welcome.html)
 
-## Lambda 関数を作成する
+## 最初の Lambda 関数を作成する
 以下の手順で Lambda 関数を作成します。
 
 1. Lambda 関数を実行するロールを作成する
@@ -446,6 +449,52 @@ Function name の thumbnail をクリックすると作成した Lambda 関数�
 
 ![](./img/thumbnail-4.png)
 
+#### ロールに S3 のアクセス権限を付与する
+以下の内容で `my-s3-policy.json` を作成します。
+
+```text
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::オリジナル画像のバケット/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::サムネイル画像のバケット/*"
+        }
+    ]
+}
+```
+
+以下のコマンドで IAM ポリシーを作成します。
+
+```bash
+aws iam create-policy \
+--policy-name my-s3-policy \
+--policy-document file://my-s3-policy.json
+```
+
+作成したポリシーをロールにアタッチします。  
+「作成したポリシーの ARN」は作成した自信の IAM ポリシーの ARN に置き換えてください。
+
+```bash
+aws iam attach-role-policy \
+--role-name my-lambda-role \
+--policy-arn 作成したポリシーの ARN
+```
+
+AWS management console で IAM サービスから Role を確認すると以下のように作成したロールが確認できます。
+
+![](./img/ima-role-1.png)
+
 #### Lambda関数を実行する
 S3 のバケットにオリジナル画像をアップロードして Lambda 関数が実行されるか確認します。
 
@@ -549,3 +598,13 @@ S3 バケットに画像をアップロードして Lambda 関数が実行され
 ```bash
 aws s3 cp img.jpg s3://S3 のバケット名
 ```
+
+AWS management console でオリジナル画像を保管する S3 バケットに移動して画像がアップロードされているか確認します。
+
+![](./img/triger-2.png)
+
+AWS management console でサムネイル画像を保管する S3 バケットにサムネイル画像が作成されているか確認します。
+
+以下の例では画像のサイズが 79.5 KB から 3.3 KB にリサイズされた画像がオリジナル画像と同じキーで作成されています。
+
+![](./img/triger-3.png)
