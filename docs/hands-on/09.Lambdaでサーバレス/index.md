@@ -431,9 +431,6 @@ aws lambda create-function \
 --runtime nodejs18.x \
 --role 作成したロールの ARN \
 --layers "登録した Layer の Version ARN" \
---environment "Variables={ORIGINAL_BUCKET=オリジナル画像の S3 バケット名,
-THUMBNAIL_BUCKET=サムネイル画像の S3 バケット名,
-AWS_REGION=us-east-1}" \
 --timeout 60
 ```
 
