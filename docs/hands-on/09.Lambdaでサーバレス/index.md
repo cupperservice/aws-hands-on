@@ -344,8 +344,34 @@ aws lambda publish-layer-version \
 ### Lambda 関数を作成する
 Lambda 関数を作成する手順は以下の通りです。
 
+#### Lambda 関数のプロジェクトを作成する
+ディレクトリを作成して `npm init` でプロジェクトを初期化します。
+
+ESModule を使用するために `package.json` に以下の内容を追記します。
+
+```json
+"type": "module"
+```
+
+`package.json` の内容は以下のようになります。
+
+```json
+{
+  "name": "thumbnail",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
+```
+
 #### Lambda 関数のコードを作成する
-ディレクトリを作成して `thumbnail.js` というファイルを作成します。  
+上記で作成したディレクトリの下に `thumbnail.js` というファイルを作成します。  
 作成したファイルに以下のコードを記述します。
 
 ```javascript
@@ -418,7 +444,7 @@ export const handler = async (event, context) => {
 作成した Lambda 関数のコードを zip で固めます。
 
 ```bash
-zip thumbnail.zip thumbnail.js
+zip thumbnail.zip thumbnail.js package.json
 ```
 
 次に zip で固めた Lambda 関数を登録します。
