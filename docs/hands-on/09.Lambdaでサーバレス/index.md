@@ -353,6 +353,12 @@ ESModule を使用するために `package.json` に以下の内容を追記し�
 "type": "module"
 ```
 
+```json
+"dependencies": {
+  "sharp": "^0.32.5"
+}
+```
+
 `package.json` の内容は以下のようになります。
 
 ```json
@@ -364,6 +370,9 @@ ESModule を使用するために `package.json` に以下の内容を追記し�
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "sharp": "^0.32.5"
   },
   "author": "",
   "license": "ISC"
