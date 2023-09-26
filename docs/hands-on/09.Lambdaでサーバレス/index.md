@@ -458,12 +458,11 @@ zip thumbnail.zip thumbnail.js package.json
 
 次に zip で固めた Lambda 関数を登録します。
 
-Layer に登録した sharp の `LayerVersionArn` は前述の手順でメモしておいたものを使用します。
+Layer に登録した sharp の `登録した Layer の Version ARN` は前述の手順でメモしておいたものを使用します。
 
 ```bash
 aws lambda create-function \
 --function-name thumbnail \
---layers "Layer の Version ARN" \
 --zip-file fileb://thumbnail.zip \
 --handler thumbnail.handler \
 --runtime nodejs18.x \
