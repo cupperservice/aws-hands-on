@@ -368,7 +368,7 @@ MONGO_URI="mongodb://<mongodb>:27017/growi"
 MONGO_URI="mongodb://10.0.30.210:27017/growi"
 ```
 
-以下のコマンドを実行して、growi を起動するためのユニットファイルを application サーバ上の `/etc/systemd/system/xgrowi.service` に保管する
+以下のコマンドを実行して、growi を起動するためのユニットファイルを application サーバ上の `/etc/systemd/system/growi.service` に保管する
 
 ```bash
 sudo curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.セキュアなネットワークの構築/conf/growi/growi.service -o /etc/systemd/system/growi.service
