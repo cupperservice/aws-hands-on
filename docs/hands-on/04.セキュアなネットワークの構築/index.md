@@ -330,7 +330,7 @@ cd /opt
 * growi を github から取得
 
 ```bash
-gitclone https://github.com/weseek/growi.git
+git clone https://github.com/weseek/growi.git
 ```
 
 * 使用する growi のバージョンを指定
