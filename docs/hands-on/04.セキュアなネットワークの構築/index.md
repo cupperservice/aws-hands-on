@@ -371,7 +371,7 @@ MONGO_URI="mongodb://10.0.30.210:27017/growi"
 以下のコマンドを実行して、growi を起動するためのユニットファイルを application サーバ上の `/etc/systemd/system/growi.service` に保管する
 
 ```bash
-sudo curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.セキュアなネットワークの構築/conf/growi/growi.service -o /etc/systemd/system/growi.service
+sudo curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.%E3%82%BB%E3%82%AD%E3%83%A5%E3%82%A2%E3%81%AA%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%81%AE%E6%A7%8B%E7%AF%89/conf/growi/growi.service -o /etc/systemd/system/growi.service
 ```
 
 定義を `systemd` に認識させる
