@@ -161,7 +161,7 @@ CloudShell から mongodb サーバの EC2 インスタンスに SSH で接続�
 以下のコマンドを実行して、`mongodb-org-6.0.repo` を mongodb サーバ上の `/etc/yum.repos.d/mongodb-org-6.0.repo` に保管する
 
 ```bash
-sudo curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.セキュアなネットワークの構築/conf/mongodb/mongodb-org-6.0.repo -o /etc/yum.repos.d/mongodb-org-6.0.repo
+sudo curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.%E3%82%BB%E3%82%AD%E3%83%A5%E3%82%A2%E3%81%AA%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%81%AE%E6%A7%8B%E7%AF%89/conf/mongodb/mongodb-org-6.0.repo -o /etc/yum.repos.d/mongodb-org-6.0.repo
 ```
 
 MongoDB をインストールする
