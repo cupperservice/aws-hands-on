@@ -350,7 +350,7 @@ growi の起動設定をセットアップ
 以下のコマンドを実行して、growi の定義ファイルを application サーバ上の `/opt/growi/growi.conf` に保管する
 
 ```bash
-curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.セキュアなネットワークの構築/conf/growi/growi.conf -o /opt/growi/growi.conf
+curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.%E3%82%BB%E3%82%AD%E3%83%A5%E3%82%A2%E3%81%AA%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%81%AE%E6%A7%8B%E7%AF%89/conf/growi/growi.conf -o /opt/growi/growi.conf
 ```
 
 `/opt/growi/growi.conf` を編集  
