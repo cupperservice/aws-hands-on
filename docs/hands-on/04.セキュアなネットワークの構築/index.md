@@ -437,7 +437,7 @@ Web ブラウザから web サーバの Public IP アドレスにアクセスし
 以下のコマンドを実行して、リバースプロキシ用の定義ファイル を web サーバ上の `/etc/nginx/conf.d/growi.conf` に保管する
 
 ```bash
-sudo curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.セキュアなネットワークの構築/conf/nginx/growi.conf -o /etc/nginx/conf.d/growi.conf
+sudo curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.%E3%82%BB%E3%82%AD%E3%83%A5%E3%82%A2%E3%81%AA%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%81%AE%E6%A7%8B%E7%AF%89/conf/nginx/growi.conf -o /etc/nginx/conf.d/growi.conf
 ```
 
 リバースプロキシの定義ファイルを編集  
