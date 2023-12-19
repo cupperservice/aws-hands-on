@@ -23,7 +23,7 @@ CloudShell を起動する
 以下のコマンドを実行して、CloudFormation のテンプレートファイル(template.yaml) を CloudShell 上にダウンロードする
 
 ```bash
-curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/05.RDSを触ってみる/cfn/template.yaml -o template.yaml
+curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/05.RDS%E3%82%92%E8%A7%A6%E3%81%A3%E3%81%A6%E3%81%BF%E3%82%8B/cfn/template.yaml -o template.yaml
 ```
 
 環境を初期化  
