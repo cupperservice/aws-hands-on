@@ -105,6 +105,7 @@ EC2 インスタンスを作成する
 |AMI                |Ubuntu           |
 |Instance type      |t2.large         |
 |Key pair           |vockey           |
+|Storage            |20 GiB           |
 
 Network Settings で [Edit] を押して以下を設定する
 
@@ -280,7 +281,7 @@ nodejs をインストールする
 
 * リポジトリを設定
 ```bash
-curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh
+curl -fsSL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
 sudo bash nodesource_setup.sh
 ```
 
@@ -302,11 +303,23 @@ sudo npm install -g yarn
 
 ```bash
 node -v
-v14.21.3
+v18.19.0
 ```
 ```bash
 yarn -v
-1.22.19
+1.22.21
+```
+
+build-essentialをインストール
+
+```bash
+sudo apt install build-essential
+```
+
+turboをインストール
+
+```bash
+sudo yarn global add turbo
 ```
 
 ### growi をセットアップする
@@ -336,36 +349,41 @@ git clone https://github.com/weseek/growi.git
 * 使用する growi のバージョンを指定
 ```bash
 cd growi
-git checkout -b v4.5.8 refs/tags/v4.5.8
+git checkout -b v6.1.0 refs/tags/v6.1.0
 ```
 
 * 必要なパッケージをインストール
 ```bash
-npm install lerna bootstrap
-npx lerna bootstrap
+sudo yarn
 ```
 
 growi の起動設定をセットアップ
 
-以下のコマンドを実行して、growi の定義ファイルを application サーバ上の `/opt/growi/growi.conf` に保管する
+以下のコマンドを実行して、growi の定義ファイルを application サーバ上の `growi-start.sh` に保管する
 
 ```bash
-curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.%E3%82%BB%E3%82%AD%E3%83%A5%E3%82%A2%E3%81%AA%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%81%AE%E6%A7%8B%E7%AF%89/conf/growi/growi.conf -o /opt/growi/growi.conf
+curl -sL https://raw.githubusercontent.com/cupperservice/aws-hands-on/main/docs/hands-on/04.%E3%82%BB%E3%82%AD%E3%83%A5%E3%82%A2%E3%81%AA%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E3%81%AE%E6%A7%8B%E7%AF%89/conf/growi/growi-start.sh -o growi-start.sh
 ```
 
-`/opt/growi/growi.conf` を編集  
+`growi-start.sh` を編集  
 `<mongodb>` の部分を mongodb サーバの Private IP アドレスに変更する
 
 * 変更前
       
 ```
-MONGO_URI="mongodb://<mongodb>:27017/growi"
+MONGO_URI="mongodb://<mongodb>:27017/growi" \
 ```
 
 * 変更後
 
 ```
-MONGO_URI="mongodb://10.0.30.210:27017/growi"
+MONGO_URI="mongodb://10.0.30.210:27017/growi" \
+```
+
+権限を変更する
+
+```bash
+sudo chmod +x /opt/growi/growi-start.sh
 ```
 
 以下のコマンドを実行して、growi を起動するためのユニットファイルを application サーバ上の `/etc/systemd/system/growi.service` に保管する

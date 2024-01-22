@@ -1,11 +1,12 @@
 [Unit]
-Description=Growi
-After=network.target
+Description = growi
+After=network-online.target mongod.service
+ConditionPathExists=/opt/growi
 
 [Service]
-WorkingDirectory=/opt/growi
-EnvironmentFile=/opt/growi/growi.conf
-ExecStart=/usr/bin/npm start
+ExecStart=/opt/growi/growi-start.sh
+Restart=no
+Type=simple
 
 [Install]
 WantedBy=multi-user.target
