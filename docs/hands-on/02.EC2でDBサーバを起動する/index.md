@@ -184,7 +184,7 @@ ssh -A ec2-user@"$IP"
 
 Bastion サーバから MariaDB サーバに接続する
 ```
-IP=MariaDB サーバの Private IP
+DB_IP=MariaDB サーバの Private IP
 ssh ec2-user@"$DB_IP"
 ```
 
