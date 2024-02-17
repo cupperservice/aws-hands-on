@@ -7,9 +7,6 @@ Parameters:
   EC2ImageId:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64
-  InstanceProfile:
-    Type: String
-    Default: LabInstanceProfile
 Resources:
   MyVPC:
     Type: AWS::EC2::VPC
@@ -186,8 +183,6 @@ Resources:
             - !Ref BastionSG
           SubnetId:
             !Ref PublicSubnet1
-      IamInstanceProfile:
-        !Ref InstanceProfile
       Tags:
         - Key: Name
           Value: bastion
